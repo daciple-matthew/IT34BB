@@ -15,7 +15,7 @@ s.student_last_name
 -- books
 b.book_title,
 b.book_author,
-b.book_categ,
+b.book_category,
 
 -- borrow date
 br.borrow_date
@@ -56,7 +56,7 @@ s.student_last_name
 -- books
 b.book_title,
 b.book_author,
-b.book_categ,
+b.book_category,
 
 -- borrow date
 br.borrow_date
