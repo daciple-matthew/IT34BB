@@ -80,6 +80,11 @@ if($section==='students' && $action==='update'){
     $studentId = (int) ($_GET['id']) ?? 00;
 
    if($_SERVER['REQUEST_METHOD']==='POST'){
+    
+   $firstName = trim($_POST['student_first_name'] ?? '');
+    $lastName = trim($_POST['student_last_name'] ?? '');    
+    $course = trim($_POST['student_course'] ?? '');
+    
     $sql=("UPDATE students
             SET student_first_name = ?,
                 student_last_name = ?,
