@@ -209,6 +209,90 @@ $stmt = $pdo->prepare($sql);
    }
 }
 
+// retrive borrowed books
+if($section==='borrow') {
+    $stmt = $pdo=>prepare("
+    SELECT
+    student_id,
+    student_first_name,
+    student_last_name
+    FROM books
+    ORDER BY student_last_name, student_first_name
+    ");
+    $students = $stmt->fetchAll();
+} 
+    $stmt = $pdo=>prepare("
+    SELECT
+    book_id,
+    book_title,
+   book_author
+    FROM books
+    ORDER BY book_title
+    ");
+    $books = $stmt->fetchAll();
+}
+// create borrow
+if($section==='borrow' && $action==='create') {
+    if($_SERVER['REQUEST_METHOD']=== 'POST'){
+        $studentId =(int) ($_POST['student_id'] ?? 00);
+         $bookId =(int) ($_POST['book_id'] ?? 00);
+
+         if($studentId >0 && $bookId >0) {
+
+         //check if student has an unretruned books
+         $stmt = $pdo->prepare("
+         SELECT borrow_id
+         FROM borrow
+         WHERE student_id=?
+         AND borrow_return_date IS NULL
+         LIMIT 1
+         ");
+         $stmt->execute([$studentId]);
+
+         $studentBorrow = $stmt->fetch();
+
+         if(studentBorrow){
+            $_SESSION('alert') = 'This student cannot borrow a book because a previous book has not been returned.';
+
+         } else {
+            $stmt = $pdo -> prepare("
+            SELECT borrow_id
+            FROM borrow
+            WHERE book_id = ?
+            AND borrow_return_date IS NULL
+            LIMIT 1
+            ");
+
+            $stmt->execute([$borrowId]);
+
+            $bookborrow = $stmt->fetch();
+
+            if ($bookBorrow) {
+                $_SESSION('alert') = 'This book cannot be borrowed because it has not been returned.';
+            } else {
+                $stmt = $pdo->prepare("
+                INSERT INTO borrow(
+                student_id,
+                book_id
+                ) VALUES(?,?)
+                 ");
+
+                 $stmt->execute([
+                    $studentId,
+                    $bookId
+                 ]);
+
+                 $_SESSION['alert']  = 'Book borrowed successfully.';
+            }
+         }
+
+         header("Location : index.php?section=borrow");
+         exit;
+
+         }
+    }
+}
+
 
 
 
@@ -221,6 +305,7 @@ $stmt = $pdo->prepare($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="table.css">
     <title>Library System</title>
 </head>
 <body>
@@ -325,15 +410,15 @@ $stmt = $pdo->prepare($sql);
     <h2><?= htmlspecialchars($student['student_first_name']) ?></h2>
         <?php else: ?>
 
-            <table>
+            <table class="student-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Course</th>
-                        <th>Created at</th>
-                        <th>Actions</th>
+                        <th>FIRST NAME</th>
+                        <th>LAST NAME</th>
+                        <th>COURSE</th>
+                        <th>CREATED AT</th>
+                        <th>ACTIONS</th>
                     </tr>
         </thead>
                 <tbody>
@@ -469,15 +554,15 @@ $stmt = $pdo->prepare($sql);
     <h2><?= htmlspecialchars($book['book_title']) ?></h2>
         <?php else: ?>
 
-            <table>
+            <table class="book-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Book Title</th>
-                        <th>Book Author</th>
-                        <th>Book Category</th>
-                        <th>Created at</th>
-                        <th>Actions</th>
+                        <th>BOOK TITLE</th>
+                        <th>BOOK AUTHOR</th>
+                        <th>BOOK CATEGORY</th>
+                        <th>CREATED AT</th>
+                        <th>ACTIONS</th>
                     </tr>
         </thead>
                 <tbody>
@@ -516,10 +601,35 @@ $stmt = $pdo->prepare($sql);
 
     <?php if($section === 'borrow'): ?>
         <h1>Borrow</h1>
+        <p> 
+            <a href="index.php?section=borrow&action=create">
+                Borrow Book
+            </a>
+
+        </p>
+
+    <?php if($section ===  'create'): ?>
+        <h2> Borrow a Book </h2>
+        <form method ="POST"> 
+
+        </form>
+
+    <?php endif;?>
     <?php endif;?>
 
 
     
     
 </body>
+
+<php if(!isset($_SESSION['alert'])):?>
+
+    <script> 
+        alert( <?= json_encode($_SESSION['alert']) ?>);
+    </script>
+
+    <?php unset($_SESSION['alert']); ?>
+        <?php endif;?>
+
+
 </html>
